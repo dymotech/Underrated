@@ -211,7 +211,7 @@ struct LoginView: View {
     @State var email: String = ""
     @State var password: String = ""
     @ObservedObject var mdl = LoginViewModel()
-    @EnvironmentObject var session: FirebaseSession
+    @Environment(\.presentationMode) var presentationMode: Binding<PresentationMode>
     
     var body: some View {
         VStack(spacing: 20) {
@@ -226,24 +226,32 @@ struct LoginView: View {
             Button(action: logOut) {
                 Text("Sign Out")
             }
-            NavigationLink(destination: SignupView()) {
-                Text("Sign Up here")
+            go().frame(width: 120, height: 50)
+            .onTapGesture { // (1)
+              self.link() // (2)
             }
-            google().frame(width: 120, height: 50)
         }
     .padding()
     }
     
+    func link() {
+//        AccountManager.shared.linkWithGoogle { [unowned self] (result, error) in
+        self.mdl.link{ (result, error) in
+//              print("User signed in \(user.uid)")
+//              self.presentationMode.wrappedValue.dismiss() // (3)
+        }
+    }
+    
     //MARK: Functions
     func logIn() {
-        session.logIn(email: email, password: password) { (result, error) in
-            if error != nil {
-                print("Error")
-            } else {
-                self.email = ""
-                self.password = ""
-            }
-        }
+//        session.logIn(email: email, password: password) { (result, error) in
+//            if error != nil {
+//                print("Error")
+//            } else {
+//                self.email = ""
+//                self.password = ""
+//            }
+//        }
     }
     
     func logOut() {
@@ -260,18 +268,60 @@ struct LoginView: View {
     }
 }
 
+struct go: View {
+    var socialLogin = SocialLogin()
+    var body: some View {
+        VStack {
+            Text("Or Login with").font(.footnote)
+            HStack {
+                Button(action: self.socialLogin.attemptLoginGoogle, label: {
+                    Image("ic_google").frame(width: 20, height: 20)
+                })
+                        .padding(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+                        .background(Color.white)
+                        .cornerRadius(8.0)
+                        .shadow(radius: 4.0)
+            }.padding()
+        }.padding(.all, 32)
+    }
+}
+
 struct google : UIViewRepresentable {
     
     func makeUIView(context: UIViewRepresentableContext<google>) -> GIDSignInButton {
         
         let button = GIDSignInButton()
         button.colorScheme = .dark
-        GIDSignIn.sharedInstance()?.presentingViewController = UIApplication.shared.windows.last?.rootViewController
+//        GIDSignIn.sharedInstance()?.presentingViewController = UIApplication.shared.windows.last?.rootViewController
         return button
     }
     func updateUIView(_ uiView: GIDSignInButton, context: UIViewRepresentableContext<google>) {
         
     }
+}
+
+struct SocialLogin: UIViewRepresentable {
+
+    func makeUIView(context: UIViewRepresentableContext<SocialLogin>) -> UIView {
+        return UIView()
+    }
+
+    func updateUIView(_ uiView: UIView, context: UIViewRepresentableContext<SocialLogin>) {
+    }
+
+    func attemptLoginGoogle() {
+        GIDSignIn.sharedInstance()?.presentingViewController = UIApplication.shared.windows.last?.rootViewController
+        GIDSignIn.sharedInstance()?.signIn()
+    }
+
+//    func attemptLoginFb(completion: @escaping (_ result: FBSDKLoginManagerLoginResult?, _ error: Error?) -> Void) {
+//        let fbLoginManager: FBSDKLoginManager = FBSDKLoginManager()
+//        fbLoginManager.logOut()
+//        fbLoginManager.logIn(withReadPermissions: ["email"], from: UIApplication.shared.windows.last?.rootViewController) { (result, error) -> Void in
+//            completion(result, error)
+//        }
+//    }
+
 }
 
 struct LoginView_Previews: PreviewProvider {

@@ -19,11 +19,11 @@ class AuthenticationService: ObservableObject {
   
   @LazyInjected private var filmRepository: FilmRepository
   private var handle: AuthStateDidChangeListenerHandle?
-  private var coordinator:SignInWithGoogleCoordinator?
+  private var coordinator: GoogleManager?
   
   init() {
     registerStateListener()
-    self.coordinator = SignInWithGoogleCoordinator()
+    self.coordinator = GoogleManager()
   }
   
   func signIn() {
@@ -31,6 +31,29 @@ class AuthenticationService: ObservableObject {
       Auth.auth().signInAnonymously()
     }
   }
+    
+    enum LoginError: Error {
+        case unknown
+    }
+    
+    func linkWithGoogle(complitionHandler: @escaping (Bool, Error?) -> Void) -> Void {
+        self.coordinator?.linkWithGoogle { (result, error) in
+            if let error = error {
+                complitionHandler(false, error)
+                return
+            }
+            
+            if result == true {
+                complitionHandler(true, nil)
+            } else {
+                complitionHandler(false, LoginError.unknown)
+            }
+        }
+    }
+    
+//    func link() {
+//        self.coordinator?.linkWithGoogle(callback: <#T##(Bool, Error?) -> Void#>)
+//    }
   
   func signOut() {
     do {
@@ -75,7 +98,7 @@ class AuthenticationService: ObservableObject {
       }
       else {
         print("User signed out.")
-        self.signIn()
+//        self.signIn()
       }
     }
   }
@@ -88,78 +111,205 @@ enum SignInState: String {
   case reauth
 }
 
-class SignInWithGoogleCoordinator: NSObject {
-    @LazyInjected private var filmRepository: FilmRepository
-    @LazyInjected private var authenticationService: AuthenticationService
+//class SignInWithGoogleCoordinator: NSObject {
+//    @LazyInjected private var filmRepository: FilmRepository
+//    @LazyInjected private var authenticationService: AuthenticationService
+//
+//    private weak var window: UIWindow!
+//    private var onSignedInHandler: ((User) -> Void)?
+//
+//    override init() {
+//        super.init()
+//        GIDSignIn.sharedInstance().clientID = FirebaseApp.app()?.options.clientID
+//        GIDSignIn.sharedInstance().delegate = self
+//    }
+//
+//    func signIn(onSignedInHandler: @escaping (User) -> Void) {
+////      self.onSignedInHandler = onSignedInHandler
+////
+////      let request = appleIDRequest(withState: .signIn)
+////
+////      let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+////      authorizationController.delegate = self
+////      authorizationController.presentationContextProvider = self
+////      authorizationController.performRequests()
+//    }
+//
+//    func link(onSignedInHandler: @escaping (User) -> Void) {
+////      self.onSignedInHandler = onSignedInHandler
+////
+////      let request = appleIDRequest(withState: .link)
+////      let authorizationController = ASAuthorizationController(authorizationRequests: [request])
+////      authorizationController.delegate = self
+////      authorizationController.presentationContextProvider = self
+////      authorizationController.performRequests()
+//    }
+//}
+
+//extension SignInWithGoogleCoordinator: GIDSignInDelegate {
+//
+//    @available(iOS 9.0, *)
+//    func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any])
+//      -> Bool {
+//      return GIDSignIn.sharedInstance().handle(url)
+//    }
+//
+//
+//    func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
+//        return GIDSignIn.sharedInstance().handle(url)
+//    }
+//
+//    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error?) {
+//        print("HERE")
+//      // ...
+//      if let error = error {
+//        // ...
+//        print(error)
+//        return
+//      }
+//
+//
+//      guard let authentication = user.authentication else { return }
+//      let credential = GoogleAuthProvider.credential(withIDToken: authentication.idToken,
+//                                                        accessToken: authentication.accessToken)
+//    print(credential)
+//
+////        Auth.auth().signIn(with: credential) { (authResult, error) in
+////        if let error = error {
+//
+//
+//        Auth.auth().currentUser?.link(with: credential) { (authResult, error) in
+//        if let error = error {
+//            print(error)
+//        } else {
+//            print("USER CONVERTED")
+//        }
+//    }
+////    user.linkAndRetrieveData(with: credential) { (authResult, error) in
+////        if let error = error {
+////            firebaselinkingComplitionHandler(false, error)
+////            return
+////        }
+////        firebaselinkingComplitionHandler(true, nil)
+////    }
+//    }
+//
+//    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+//        // Perform any operations when the user disconnects from app here.
+//        // ...
+//    }
+//
+//
+//}
+
+// NEW STUFF
+
+enum GoogleError: Error {
+    case invalidUser
+}
+
+enum GoogleSignInError: Error {
+    case unknown
+    case invalidAuthentication
+}
+
+enum GoogleSignOutError: Error {
+    case unknown
+}
+
+class GoogleManager: NSObject {
     
-    private weak var window: UIWindow!
-    private var onSignedInHandler: ((User) -> Void)?
+    enum Mode {
+        case create, edit
+    }
+    
+//    let firebaseManager:FirebaseBoundaries!
+    var loginComplitionHandler: ((Bool, Error?) -> ())?
+    var mode: Mode = .create
     
     override init() {
+//        self.firebaseManager = firebaseManager
+        
         super.init()
+        
         GIDSignIn.sharedInstance().clientID = FirebaseApp.app()?.options.clientID
         GIDSignIn.sharedInstance().delegate = self
     }
-    
-    func signIn(onSignedInHandler: @escaping (User) -> Void) {
+}
+
+extension GoogleManager {
+    func loginWithGoogle(callback: @escaping (Bool,  Error?) -> Void) -> Void {
+        mode = .create
+        GIDSignIn.sharedInstance().signIn()
+        loginComplitionHandler = callback
     }
     
-    func link(onSignedInHandler: @escaping (User) -> Void) {
+    func linkWithGoogle(callback: @escaping (Bool,  Error?) -> Void) -> Void {
+        mode = .edit
+        GIDSignIn.sharedInstance().signIn()
+        loginComplitionHandler = callback
+    }
+    
+    func logout() {
+        GIDSignIn.sharedInstance()?.signOut()
     }
 }
 
-extension SignInWithGoogleCoordinator: GIDSignInDelegate {
+extension GoogleManager: GIDSignInDelegate {
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error?) {
+        GIDSignIn.sharedInstance().clientID = FirebaseApp.app()?.options.clientID
+        GIDSignIn.sharedInstance().delegate = self
+        
+        if let error = error {
+            self.loginComplitionHandler!(false, error)
+            return
+        }
+        guard let authentication = user.authentication else {
+            self.loginComplitionHandler!(false, GoogleSignInError.invalidAuthentication)
+            return
+        }
+        
+        let credential = GoogleAuthProvider.credential(withIDToken: authentication.idToken, accessToken: authentication.accessToken)
+        
+        if mode == .create {
+            Auth.auth().signIn(with: credential) { (authResult, error) in
+                if let error = error {
+                    self.loginComplitionHandler!(false, error)
+                    return
+                }
+//                self.firebaseManager.persistentManager.saveGoogle(idToken: authentication.idToken, accessToken: authentication.accessToken, email: user.profile.email)
+                self.loginComplitionHandler!(true, nil)
+            }
+        } else {
+                Auth.auth().currentUser?.link(with: credential) { (authResult, error) in
+                    if let error = error {
+                        self.loginComplitionHandler!(false, error)
+                        print(error)
+                        return
+                    }
+    //                    self.firebaseManager.persistentManager.saveGoogle(idToken: authentication.idToken, accessToken: authentication.accessToken, email: user.profile.email)
+                    self.loginComplitionHandler!(true, nil)
+                }
+            }
+    }
     
+    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
+        if let error = error {
+            self.loginComplitionHandler!(false, error)
+            return
+        }
+    }
+}
+
+extension GoogleManager {
     @available(iOS 9.0, *)
     func application(_ application: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any])
       -> Bool {
       return GIDSignIn.sharedInstance().handle(url)
     }
 
-    
+
     func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
         return GIDSignIn.sharedInstance().handle(url)
     }
-    
-    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!, withError error: Error?) {
-        print("HERE")
-      // ...
-      if let error = error {
-        // ...
-        print(error)
-        return
-      }
-
-        
-      guard let authentication = user.authentication else { return }
-      let credential = GoogleAuthProvider.credential(withIDToken: authentication.idToken,
-                                                        accessToken: authentication.accessToken)
-    print(credential)
-        
-//        Auth.auth().signIn(with: credential) { (authResult, error) in
-//        if let error = error {
-            
-
-        Auth.auth().currentUser?.link(with: credential) { (authResult, error) in
-        if let error = error {
-            print(error)
-        } else {
-            print("USER CONVERTED")
-        }
-    }
-//    user.linkAndRetrieveData(with: credential) { (authResult, error) in
-//        if let error = error {
-//            firebaselinkingComplitionHandler(false, error)
-//            return
-//        }
-//        firebaselinkingComplitionHandler(true, nil)
-//    }
-    }
-
-    func sign(_ signIn: GIDSignIn!, didDisconnectWith user: GIDGoogleUser!, withError error: Error!) {
-        // Perform any operations when the user disconnects from app here.
-        // ...
-    }
-
-  
 }

@@ -9,39 +9,14 @@
 import SwiftUI
 
 struct ContentView: View {
+    @ObservedObject var viewModel = ContentViewModel()
     var body: some View {
-        TabView {
-            HomeView()
-                .tabItem {
-                    VStack {
-                        Image(systemName: "house.fill")
-                        Text("Home")
-                    }
-            }.tag(1)
-
-            FilmsListView()
-                .tabItem {
-                    VStack {
-                        Image(systemName: "film")
-                        Text("Film")
-                    }
-            }.tag(2)
-
-            BookView()
-                .tabItem {
-                    VStack {
-                        Image(systemName: "book")
-                        Text("Books")
-                    }
-            }.tag(3)
-
-            LibraryView()
-                .tabItem {
-                    VStack {
-                        Image(systemName: "gear")
-                        Text("Settings")
-                    }
-            }.tag(4)
+        Group {
+            if (viewModel.userId != nil) {
+                MainTabView()
+          } else {
+                LoginView()
+          }
         }
     }
 }

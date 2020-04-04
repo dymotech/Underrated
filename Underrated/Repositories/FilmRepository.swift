@@ -25,6 +25,7 @@ protocol FilmRepository: BaseFilmRepository {
   func addFilm(_ film: Film)
   func removeFilm(_ film: Film)
   func updateFilm(_ film: Film)
+  func queryFilmsByGenre(genre: String, callback: @escaping ([Film]?)->Void)
 }
 
 class TestDataFilmRepository: BaseFilmRepository, FilmRepository, ObservableObject {
@@ -35,6 +36,13 @@ class TestDataFilmRepository: BaseFilmRepository, FilmRepository, ObservableObje
   
   func addFilm(_ film: Film) {
     films.append(film)
+  }
+    
+  func queryFilmsByGenre(genre: String, callback: @escaping ([Film]?)->Void) {
+     let filteredFilms = films.filter { film -> Bool in
+        film.genre == genre
+    }
+    callback(filteredFilms)
   }
   
   func removeFilm(_ film: Film) {
@@ -73,6 +81,13 @@ class LocalFilmRepository: BaseFilmRepository, FilmRepository, ObservableObject 
       self.films[index] = film
       saveData()
     }
+  }
+    
+  func queryFilmsByGenre(genre: String, callback: @escaping ([Film]?)->Void) {
+     let filteredFilms = films.filter { film -> Bool in
+        film.genre == genre
+    }
+    callback(filteredFilms)
   }
   
   private func loadData() {
@@ -127,6 +142,25 @@ class FirestoreFilmRepository: BaseFilmRepository, FilmRepository, ObservableObj
       }
       .store(in: &cancellables)
   }
+    
+    
+    func queryFilmsByGenre(genre: String, callback: @escaping ([Film]?) -> Void) {
+        db.collection(filmsPath)
+//        .whereField("userId", isEqualTo: self.userId)
+        .whereField("genre", isEqualTo: genre)
+        .getDocuments() { (querySnapshot, err) in
+            if let err = err {
+                print("Error getting documents: \(err)")
+            } else {
+                if let querySnapshot = querySnapshot {
+                    let genreFilms = querySnapshot.documents.compactMap { document -> Film? in
+                      try? document.data(as: Film.self)
+                    }
+                    callback(genreFilms)
+                }
+            }
+        }
+    }
   
   private func loadData() {
     if listenerRegistration != nil {
@@ -134,7 +168,6 @@ class FirestoreFilmRepository: BaseFilmRepository, FilmRepository, ObservableObj
     }
     listenerRegistration = db.collection(filmsPath)
       .whereField("userId", isEqualTo: self.userId)
-//      .order(by: "createdTime")
       .addSnapshotListener { (querySnapshot, error) in
         if let querySnapshot = querySnapshot {
           self.films = querySnapshot.documents.compactMap { document -> Film? in

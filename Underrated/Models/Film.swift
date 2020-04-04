@@ -19,13 +19,13 @@ struct Film: Identifiable, Codable {
     @ServerTimestamp var createdTime: Timestamp?
     var description: String;
     var director: String;
+    var genre: String;
     var poster: String;
     var releaseYear: Int;
     var starring: [String];
     var title: String;
     var writer: String;
     var userId: String?
-    
     
 }
 
@@ -39,7 +39,7 @@ struct TODOS: Identifiable, Codable {
 
 #if DEBUG
 let testDataFilms = [
-    Film(description: "USA wins WWII, but faster", director: "Quentin Taratino", poster: "https://image.tmdb.org/t/p/w1280/ai0LXkzVM3hMjDhvFdKMUemoBe.jpg", releaseYear: 2009, starring:["Brad Pitt", "Cristoff Waltz"], title:"Inglourious Basterds", writer:"Quentin Taratino")
+    Film(description: "USA wins WWII, but faster", director: "Quentin Taratino", genre: "Action", poster: "https://image.tmdb.org/t/p/w1280/ai0LXkzVM3hMjDhvFdKMUemoBe.jpg", releaseYear: 2009, starring:["Brad Pitt", "Cristoff Waltz"], title:"Inglourious Basterds", writer:"Quentin Taratino")
 //  Task(title: "Implement UI", priority: .medium, completed: false),
 //  Task(title: "Connect to Firebase", priority: .medium, completed: false),
 //  Task(title: "????", priority: .high, completed: false),

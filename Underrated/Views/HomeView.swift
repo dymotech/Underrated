@@ -12,8 +12,8 @@ struct HomeView: View {
 var body: some View {
     NavigationView {
         Text("We have much to discuss")
-            .font(.largeTitle)
-            .navigationBarTitle("Welcome Home")
+            .font(.title)
+            .navigationBarTitle("Underrated")
     }
 }
 }

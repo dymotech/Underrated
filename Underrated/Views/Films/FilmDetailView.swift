@@ -10,7 +10,9 @@ import SwiftUI
 
 struct FilmDetailView: View {
 //    var title;
-//    var film: Film;
+    var film: Film;
+//    @ObservedObject
+    var viewModel = FilmDetailViewModel()
     var body: some View {
         VStack {
 //            Image(film.image)
@@ -20,11 +22,20 @@ struct FilmDetailView: View {
 ////                .frame(width: 320, height: 180)
 //            .cornerRadius(10)
 //                .padding()
-            Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+            Text(film.title).onTapGesture {
+                self.addFilm()
+            }
         }
 //        .navigationBarTitle(Text(film.image), displayMode: .inline)
     }
+    
+    func addFilm() {
+        var fill = self.film
+        fill.title = "xxxxxxxxxxxx"
+        self.viewModel.addFilm(film: fill)
+    }
 }
+
 
 //struct FilmView_Previews: PreviewProvider {
 //    static var previews: some View {
@@ -33,9 +44,9 @@ struct FilmDetailView: View {
 //}
 
 #if DEBUG
-struct FilmView_Previews: PreviewProvider {
+struct FilmDetailView_Previews: PreviewProvider {
   static var previews: some View {
-    FilmDetailView()
+    FilmDetailView(film: testDataFilms[0])
   }
 }
 #endif

@@ -9,113 +9,31 @@
 import UIKit
 import SwiftUI
 import Resolver
+import Combine
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var currentScene: UIScene?
     var window: UIWindow?
-    @LazyInjected var authenticationService: AuthenticationService
-
-//    NotificationCenter.default.addObserver(forName: .newUser, object: nil, queue: .main) { [weak self] (notification) in
-//
-//    guard let windowScene = self?.currentScene as? UIWindowScene else { return }
-//
-//    keyWindow = UIWindow(windowScene: windowScene)
-//    keyWindow?.rootViewController = UIHostingController(rootView: Text("hello"))
-//    keyWindow?.makeKeyAndVisible()
-
-//    NotificationCenter.default.addObserver(self, selector:#selector(done(notification:)),name:LoginView.NotificationDone,object: nil)
-//    NotificationCenter.default.addObserver(self, selector: #selector(onDidReceiveData(_:)), name: .didReceiveData, object: nil)
-//
-//    Notification.def
-    let nc = NotificationCenter.default
-    
-
-//    @objc func done(notification: Notification) {
-//        let window = UIWindow(windowScene: windowScene)
-//        window.rootViewController = UIHostingController(rootView: contentView)
-//        self.window = window
-//        window.makeKeyAndVisible()
-//    }
-    
-//    func done2(notification: Notification) {
-//        let storyboard = UIStoryboard(name: "Main", bundle: Bundle(for: type(of: self)))
-//        self.window?.rootViewController = storyboard.instantiateInitialViewController()
-//    }
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-
-//        nc.addObserver(self, selector: #selector(userLoggedIn), name: Notification.Name("UserLoggedIn"), object: nil)
-//        nc.addObserver(self, selector:#selector(done(notification:)), name:Constants.UserLoggedInNotification, object: nil)
-
-//        let keyWindow: UIWindow?
-//        self.currentScene = scene
-//        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-
+        
+        guard ((UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext) != nil else {
+            fatalError("Unable to read managed object context.")
+        }
+        
         guard let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext else {
             fatalError("Unable to read managed object context.")
         }
-
-         let session = FirebaseSession()
-
-//        NotificationCenter.default.addObserver(forName: Constants.UserLoggedInNotification, object: nil, queue: .main) { [weak self] (notification) in
-//
-//             guard let windowScene = self?.currentScene as? UIWindowScene else { return }
-//
-//             keyWindow = UIWindow(windowScene: windowScene)
-//             let contentView = ContentView().environment(\.managedObjectContext, context)
-//             keyWindow?.rootViewController = UIHostingController(rootView: contentView.environmentObject(session))
-//             keyWindow?.makeKeyAndVisible()
-//
-//           }
-
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-
-        // Get the managed object context from the shared persistent container.
-
-
-        // Create the SwiftUI view and set the context as the value for the managedObjectContext environment keyPath.
-        // Add `@Environment(\.managedObjectContext)` in the views that will need the context.
-//        let loginView = LoginView().environment(\.managedObjectContext, context)
         
         let contentView = ContentView().environment(\.managedObjectContext, context)
-
-        // Use a UIHostingController as window root view controller.
         if let windowScene = scene as? UIWindowScene {
             let window = UIWindow(windowScene: windowScene)
-//            window.rootViewController = UIHostingController(rootView: loginView)
-            window.rootViewController = UIHostingController(rootView: contentView.environmentObject(session))
+            window.rootViewController = UIHostingController(rootView: contentView)
             self.window = window
             window.makeKeyAndVisible()
         }
     }
-    
-//    func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-//        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-//        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-//        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-//        // Create the SwiftUI view that provides the window contents.
-//
-//        guard let context = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer.viewContext else {
-//            fatalError("Unable to read managed object context.")
-//        }
-//
-////        let contentView = ContentView()
-//        let contentView = ContentView().environment(\.managedObjectContext, context)
-//
-//        //Firebase
-//        let session = FirebaseSession()
-//
-//        // Use a UIHostingController as window root view controller.
-//        if let windowScene = scene as? UIWindowScene {
-//            let window = UIWindow(windowScene: windowScene)
-//            window.rootViewController = UIHostingController(rootView: contentView.environmentObject(session))
-//            self.window = window
-//            window.makeKeyAndVisible()
-//        }
-//    }
 
     func sceneDidDisconnect(_ scene: UIScene) {
         // Called as the scene is being released by the system.

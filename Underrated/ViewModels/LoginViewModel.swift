@@ -12,6 +12,21 @@ import Resolver
 class LoginViewModel: ObservableObject {
 @Published private var authenticationService: AuthenticationService = Resolver.resolve()
 
+    func link(complitionHandler: @escaping (Bool, Error?) -> Void) -> Void {
+        self.authenticationService.linkWithGoogle(complitionHandler: { (result, error) in
+            if let error = error {
+                complitionHandler(false, error)
+                return
+            }
+            
+            if result == true {
+                complitionHandler(true, nil)
+            } else {
+                complitionHandler(false, nil)
+            }
+        })
+    }
+    
 func logout() {
   self.authenticationService.signOut()
 }
